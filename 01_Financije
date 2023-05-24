@@ -1,0 +1,162 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using Financije;
+
+namespace Testovi
+{
+    [TestClass]
+    public class BankaTests
+    {
+        [TestMethod]
+        public void Test1()
+        {
+            Banka banka = new Banka();
+
+            Assert.IsNull(banka.DohvatiRacun("HR12"));
+        }
+
+        [TestMethod]
+        public void Test2()
+        {
+            Banka banka = new Banka();
+
+            Assert.IsNotNull(banka.DohvatiRacun("HR11"));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(BankAccountBlockedException))]
+        public void Test3()
+        {
+            Banka banka = new Banka();
+            
+            banka.DohvatiRacun("HR44");
+        }
+    }
+}
+
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using Financije;
+
+namespace Testovi
+{
+    [TestClass]
+    public class RacunTests
+    {
+        [TestMethod]
+        [ExpectedException(typeof(TransactionFailedException))]
+        public void Test4()
+        {
+            Banka banka = new Banka();
+            Racun platitelj = new Racun();
+            Racun primatelj = new Racun();
+            platitelj = banka.DohvatiRacun("HR11");
+            primatelj = banka.DohvatiRacun("HR21");
+
+            platitelj.Isplati(primatelj, 30000);
+        }
+
+        [TestMethod]
+        public void Test5()
+        {
+            Banka banka = new Banka();
+            
+            Racun platitelj = new Racun();
+            platitelj = banka.DohvatiRacun("HR11");
+
+            Racun primatelj = new Racun();
+            primatelj = banka.DohvatiRacun("HR22");
+
+            platitelj.Isplati(primatelj, 30000);
+            Assert.IsTrue(platitelj.Stanje == 70000 && primatelj.Stanje == 80000);
+        }
+
+        [TestMethod]
+        public void Test6()
+        {
+            Banka banka = new Banka();
+
+            Racun platitelj = new Racun();
+            platitelj = banka.DohvatiRacun("HR11");
+
+            Racun primatelj = new Racun();
+            primatelj = banka.DohvatiRacun("HR22");
+            var iznos = 30000;
+            platitelj.Isplati(primatelj, iznos);
+            Isplata isplata = new Isplata
+            {
+                Platitelj = platitelj.IBAN,
+                Primatelj = primatelj.IBAN,
+                Iznos = iznos
+            };
+            Assert.IsTrue(isplata.Platitelj == "HR11" && isplata.Primatelj == "HR22" && isplata.Iznos == 30000);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(TransactionFailedException))]
+        public void Test7()
+        {
+            Banka banka = new Banka();
+
+            Racun platitelj = new Racun();
+            platitelj = banka.DohvatiRacun("HR11");
+
+            Racun primatelj = new Racun();
+            primatelj = banka.DohvatiRacun("HR22");
+
+            platitelj.Isplati(primatelj, 130000);
+        }
+
+        [TestMethod]
+        public void Test8()
+        {
+            Banka banka = new Banka();
+            
+            Racun platitelj = new Racun();
+            platitelj = banka.DohvatiRacun("HR66");
+
+            Racun primatelj = new Racun();
+            primatelj = banka.DohvatiRacun("HR55");
+            var iznos = 3000;
+            platitelj.Isplati(primatelj, iznos);
+            Isplata isplata = new Isplata
+            {
+                Platitelj = platitelj.IBAN,
+                Primatelj = primatelj.IBAN,
+                Iznos = iznos
+            };
+            Assert.IsTrue(platitelj.Stanje == -1000 && primatelj.Stanje == 11000 && isplata.Iznos == 3000);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(TransactionFailedException))]
+        public void Test9()
+        {
+            Banka banka = new Banka();
+
+            Racun platitelj = new Racun();
+            platitelj = banka.DohvatiRacun("HR66");
+
+            Racun primatelj = new Racun();
+            primatelj = banka.DohvatiRacun("HR55");
+
+            platitelj.Isplati(primatelj, 5500);
+        }
+
+        [TestMethod]
+        [ExpectedException (typeof(TransactionFailedException))]
+        public void Test10()
+        {
+            Banka banka = new Banka();
+
+            Racun platitelj = new Racun();
+            platitelj = banka.DohvatiRacun("HR11");
+
+            Racun primatelj = new Racun();
+            primatelj = banka.DohvatiRacun("HR22");
+
+            platitelj.Isplati(primatelj, -500);
+        }
+    }
+}
