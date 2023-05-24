@@ -1,0 +1,243 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using Prijava;
+
+namespace Testovi
+{
+    [TestClass]
+    public class UnitTest1
+    {
+        [TestMethod]
+        public void Test1()
+        {
+            Autentifikator autentifikator = new Autentifikator();
+            Korisnik odabraniKorisnik = autentifikator.DohvatiKorisnika("valic");
+            Assert.IsTrue(odabraniKorisnik.KorisnickoIme == "valic");
+        }
+
+        [TestMethod]
+        public void Test2()
+        {
+            Autentifikator autentifikator = new Autentifikator();
+            Korisnik odabraniKorisnik = autentifikator.DohvatiKorisnika("mmarkic");
+            Assert.IsNull(odabraniKorisnik);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InactiveUserException))]
+        public void Test3()
+        {
+            Autentifikator autentifikator = new Autentifikator();
+            autentifikator.DohvatiKorisnika("gtudor");
+        }
+
+        [TestMethod]
+        public void Test4()
+        {
+            Autentifikator autentifikator = new Autentifikator();
+            autentifikator.RegistrirajKorisnika("gtudor", "nrtgs");
+            Korisnik korisnik = autentifikator.DohvatiKorisnika("gtudor");
+            Assert.IsTrue(korisnik != null && korisnik.Aktivan == true);
+        }
+
+        [TestMethod]
+        public void Test5()
+        {
+            Autentifikator autentifikator = new Autentifikator();
+            autentifikator.RegistrirajKorisnika("mmarkic", "101010");
+            Korisnik korisnik = autentifikator.DohvatiKorisnika("mmarkic");
+            Assert.IsTrue(korisnik != null && korisnik.Tip == TipKorisnika.Obicni);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(IncorrectAuthenticationData))]
+        public void Test6()
+        {
+            Autentifikator autentifikator = new Autentifikator();
+            autentifikator.RegistrirajKorisnika("thorvat", "121212");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(UnauthorizedRegistrationException))]
+        public void Test7()
+        {
+            Autentifikator autentifikator = new Autentifikator();
+            autentifikator.PrijaviKorisnika("pivic", "12345");
+            autentifikator.RegistrirajKorisnika("mmarkic", "101010", TipKorisnika.Administrator);
+        }
+
+        [TestMethod]
+        public void Test8()
+        {
+            Autentifikator autentifikator = new Autentifikator();
+            autentifikator.PrijaviKorisnika("mmijac", "abcde");
+            autentifikator.RegistrirajKorisnika("mmarkic", "101010", TipKorisnika.Administrator);
+            Assert.IsTrue(autentifikator.DohvatiKorisnika("mmarkic") != null);
+        }
+
+        [TestMethod]
+        public void Test9()
+        {
+            Autentifikator autentifikator = new Autentifikator();
+            autentifikator.RegistrirajKorisnika("mmarkic", "101010", TipKorisnika.Gost);
+            Assert.IsTrue(autentifikator.DohvatiKorisnika("mmarkic") == null);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(IncorrectAuthenticationData))]
+        public void Test10()
+        {
+            Autentifikator autentifikator = new Autentifikator();
+            autentifikator.RegistrirajKorisnika("test", "122123");
+        }
+    }
+}
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Prijava
+{
+    public class FailedAuthenticationException : ApplicationException
+    {
+        public FailedAuthenticationException(string message)
+            :base(message)
+        {
+
+        }
+    }
+
+    public class IncorrectAuthenticationData : ApplicationException
+    {
+        public IncorrectAuthenticationData() : base()
+        {
+
+        }
+    }
+
+    public class UnauthorizedRegistrationException : ApplicationException
+    {
+        public UnauthorizedRegistrationException() : base()
+        {
+
+        }
+    }
+
+    public class InactiveUserException : ApplicationException
+    {
+        public InactiveUserException() : base()
+        {
+
+        }
+    }
+
+    public class Autentifikator
+    {
+        private List<Korisnik> Korisnici { get; set; }
+        public Korisnik PrijavljeniKorisnik { get; private set; }
+
+        public Autentifikator()
+        {
+            Korisnici = new List<Korisnik>();
+
+            Korisnici.Add(new Korisnik { KorisnickoIme = "mmijac", Lozinka="abcde", Tip = TipKorisnika.Administrator });
+            Korisnici.Add(new Korisnik { KorisnickoIme = "pivic", Lozinka = "12345", Tip = TipKorisnika.Obicni });
+            Korisnici.Add(new Korisnik { KorisnickoIme = "valic", Lozinka = "ab234", Tip = TipKorisnika.Obicni });
+            Korisnici.Add(new Korisnik { KorisnickoIme = "anovak", Lozinka = "qetzs", Tip = TipKorisnika.Obicni });
+            Korisnici.Add(new Korisnik { KorisnickoIme = "thorvat", Lozinka = "hfdrz", Tip = TipKorisnika.Obicni });
+            Korisnici.Add(new Korisnik { KorisnickoIme = "gtudor", Lozinka = "nrtgs", Tip = TipKorisnika.Obicni, Aktivan = false });
+            Korisnici.Add(new Korisnik { KorisnickoIme = "btomas", Lozinka = "kgdrt", Tip = TipKorisnika.Administrator });
+            Korisnici.Add(new Korisnik { KorisnickoIme = "gost", Lozinka = "gost", Tip = TipKorisnika.Gost });
+        }
+
+        public void PrijaviKorisnika(string korisnickoIme, string lozinka)
+        {
+            if (korisnickoIme != "" && lozinka != "")
+            {
+                PrijavljeniKorisnik = Korisnici.FirstOrDefault(k => k.KorisnickoIme == korisnickoIme && k.Lozinka == lozinka);
+            }
+        }
+
+        public void PrijaviKorisnika()
+        {
+            PrijaviKorisnika("gost", "gost");
+        }
+
+        public void OdjaviKorisnika()
+        {
+            if (PrijavljeniKorisnik != null)
+            {
+                PrijavljeniKorisnik = null;
+            }
+            else
+            {
+                throw new InvalidOperationException("Odjava je moguća samo ukoliko je korisnik prijavljen!");
+            }
+            
+        }
+
+        public void RegistrirajKorisnika(string korisnickoIme, string lozinka)
+        {
+            RegistrirajKorisnika(korisnickoIme, lozinka, TipKorisnika.Obicni);
+        }
+
+        public void RegistrirajKorisnika(string korisnickoIme, string lozinka, TipKorisnika tip)
+        {
+            if (Korisnici.Exists(x => x.KorisnickoIme == korisnickoIme && x.Aktivan == true))
+            {
+                throw new IncorrectAuthenticationData();
+            }
+
+            if (Korisnici.Exists(x => x.KorisnickoIme == korisnickoIme && x.Aktivan == false))
+            {
+                var neaktivanKorisnik = Korisnici.First(x => x.KorisnickoIme == korisnickoIme);
+                neaktivanKorisnik.Aktivan = true;
+                return;
+            }
+
+            if (lozinka.Length < 5)
+            {
+                throw new IncorrectAuthenticationData();
+            }
+
+            if (korisnickoIme.Length < 5)
+            {
+                throw new IncorrectAuthenticationData();
+            }
+
+            if (tip == TipKorisnika.Gost)
+            {
+                return;
+            }
+
+            if (tip == TipKorisnika.Administrator && (PrijavljeniKorisnik == null || PrijavljeniKorisnik.Tip != TipKorisnika.Administrator))
+            {
+                throw new UnauthorizedRegistrationException();
+            }
+
+            Korisnik korisnik = new Korisnik
+            {
+                KorisnickoIme = korisnickoIme,
+                Lozinka = lozinka,
+                Tip = tip
+            };
+
+            Korisnici.Add(korisnik);
+        }
+
+        public Korisnik DohvatiKorisnika(string korisnickoIme)
+        {
+            var korisnik = Korisnici.FirstOrDefault(k => k.KorisnickoIme == korisnickoIme);
+            if (korisnik != null && korisnik.Aktivan == false)
+            {
+                throw new InactiveUserException();
+            }
+
+            return korisnik;
+        }
+    }
+}
