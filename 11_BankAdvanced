@@ -1,0 +1,156 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MjenjacnicaLib;
+using System;
+using static MjenjacnicaLib.Mjenjacnica;
+
+namespace Testovi
+{
+    [TestClass]
+    public class MjenjacnicaTest
+    {
+        [TestMethod]
+        public void Test1()
+        {
+            Mjenjacnica mjenjacnica = new Mjenjacnica();
+
+            
+
+            Assert.IsNotNull(mjenjacnica.DohvatiValutu("Australija").Naziv == "AUD");
+            
+        }
+
+        [TestMethod]
+        public void Test2()
+        {
+            Mjenjacnica mjenjacnica = new Mjenjacnica();
+
+            Assert.IsNull(mjenjacnica.DohvatiValutu("Rusija"));
+        }
+
+        [TestMethod]
+        public void Test3()
+        {
+            Mjenjacnica mjenjacnica = new Mjenjacnica();
+            PopisTecajeva popisTecajeva = new PopisTecajeva(mjenjacnica);
+
+            Assert.IsTrue(popisTecajeva.VratiTecajZaValutu("AUD").Vrijednost == 4.07);
+        }
+
+        [TestMethod]
+        public void Test4()
+        {
+            Mjenjacnica mjenjacnica = new Mjenjacnica();
+            PopisTecajeva popisTecajeva = new PopisTecajeva(mjenjacnica);
+
+            Assert.IsNull(popisTecajeva.VratiTecajZaValutu("RBL"));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidCurrencyException))]
+        public void Test6()
+        {
+            Mjenjacnica mjenjacnica = new Mjenjacnica();
+
+            mjenjacnica.PromijeniNovac(null, mjenjacnica.DohvatiValutu("BiH"), 1000);
+
+        }
+
+        [TestMethod]
+        public void Test7()
+        {
+            Mjenjacnica mjenjacnica = new Mjenjacnica();
+
+            Assert.AreEqual(mjenjacnica.PromijeniNovac(mjenjacnica.DohvatiValutu("Kanada"), mjenjacnica.DohvatiValutu("Kanada"), 500), 500);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidAmountException))]
+        public void Test8()
+        {
+            Mjenjacnica mjenjacnica = new Mjenjacnica();
+            mjenjacnica.PromijeniNovac(mjenjacnica.DohvatiValutu("Kanada"), mjenjacnica.DohvatiValutu("BiH"), 0);
+
+        }
+    }
+}
+
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace MjenjacnicaLib
+{
+    public class Mjenjacnica
+    {
+        public class InvalidCurrencyException : ApplicationException
+        {
+            public InvalidCurrencyException(string message)
+                : base(message)
+            {
+
+            }
+        }
+        public class InvalidAmountException : ApplicationException
+        {
+            public InvalidAmountException(string message)
+                : base(message)
+            {
+
+            }
+        }
+        public Valuta ReferentnaValuta { get; set; }
+        public PopisTecajeva PopisTecajeva { get; set; }
+        public List<Valuta> Valute { get; private set; }
+
+        public Mjenjacnica()
+        {
+            Valute = new List<Valuta>();
+
+            Valute.Add(new Valuta("AUD", "Australija"));
+            Valute.Add(new Valuta("CAD", "Kanada"));
+            Valute.Add(new Valuta("CHF", "Švicarska"));
+            Valute.Add(new Valuta("GBP", "V. Britanija"));
+            Valute.Add(new Valuta("USD", "SAD"));
+            Valute.Add(new Valuta("BAM", "BiH"));
+            Valute.Add(new Valuta("EUR", "EMU"));
+            Valute.Add(new Valuta("HRK", "Hrvatska"));
+            
+            PopisTecajeva = new PopisTecajeva(this);
+            ReferentnaValuta = DohvatiValutu("HRK");
+        }
+
+        public void DodajNovuValutu(string naziv, string drzava)
+        {
+            var valuta = new Valuta(naziv, drzava);
+            Valute.Add(valuta);
+        }
+
+        public Valuta DohvatiValutu(string drzava)
+        {
+            return Valute.FirstOrDefault(v => v.Drzava == drzava);
+
+        }
+
+        public double PromijeniNovac(Valuta izvorisna, Valuta odredisna, double iznos)
+        {
+            if (izvorisna == null)
+            {
+                throw new InvalidCurrencyException("pusi karu");
+            }
+            if (iznos <= 0)
+            {
+                throw new InvalidAmountException("yea");
+            }
+            var tecajIzvorisneValute = PopisTecajeva.VratiTecajZaValutu(izvorisna);
+            var tecajOdredisneValute = PopisTecajeva.VratiTecajZaValutu(odredisna);
+            var omjerTecaja = tecajIzvorisneValute.Vrijednost / tecajOdredisneValute.Vrijednost;
+
+            return omjerTecaja * iznos;
+        }
+    }
+}
+
+
+
