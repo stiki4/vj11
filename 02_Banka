@@ -1,0 +1,139 @@
+using Banka;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Testovi
+{
+    [TestClass]
+    public class UpraviteljTransakcijamaTests
+    {
+        [TestMethod]
+        [ExpectedException(typeof(InvalidBankAccountException))]
+        public void Test1()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            banka.PrebaciSredstva("Nepostojeci", "HR11", 2000);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidAmountException))]
+        public void Test2()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            banka.PrebaciSredstva("HR22", "HR11", 0);
+        }
+
+        [TestMethod]
+        public void Test3()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            Assert.IsTrue(banka.PrebaciSredstva("HR11", "HR22", 30000).Izvor.Stanje == 70000);
+        }
+
+        [TestMethod]
+        public void Test3_1()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+            Assert.IsTrue(banka.PrebaciSredstva("HR11", "HR22", 30000).Odrediste.Stanje == 80000);
+        }
+
+        [TestMethod]
+        public void Test4()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            Assert.IsTrue(banka.PrebaciSredstva("HR11", "HR22", 30000).Naplaceno == 30000 && banka.PrebaciSredstva("HR11", "HR22", 30000).PreostaloNaplatiti == 0);
+        }
+
+        [TestMethod]
+        public void Test4_1()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            Assert.IsTrue(banka.PrebaciSredstva("HR11", "HR22", 30000).PreostaloNaplatiti == 0);
+        }
+
+        [TestMethod]
+        public void Test5()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            Assert.IsTrue(banka.PrebaciSredstva("HR66", "HR55", 3500).Izvor.Stanje == 0 && banka.PrebaciSredstva("HR66", "HR55", 3500).Odrediste.Stanje == 10000);
+        }
+
+        [TestMethod]
+        public void Test5_1()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            Assert.IsTrue(banka.PrebaciSredstva("HR66", "HR55", 3500).Odrediste.Stanje == 10000);
+        }
+
+        [TestMethod]
+        public void Test6()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            Assert.IsTrue(banka.PrebaciSredstva("HR66", "HR55", 3500).PreostaloNaplatiti == 1500);
+        }
+
+        [TestMethod]
+        public void Test6_1()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            Assert.IsTrue(banka.PrebaciSredstva("HR66", "HR55", 3500).Naplaceno == 2000);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidBankAccountException))]
+        public void Test7()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            banka.OdobriMinus("HR123123", 100);
+        }
+
+        [TestMethod]
+        public void Test8()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            banka.OdobriMinus("HR66", 2000);
+
+            Assert.IsTrue(banka.PrebaciSredstva("HR66", "HR55", 3500).Izvor.Stanje == -1500);
+        }
+
+        [TestMethod]
+        public void Test8_1()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            banka.OdobriMinus("HR66", 2000);
+
+            Assert.IsTrue(banka.PrebaciSredstva("HR66", "HR55", 3500).Odrediste.Stanje == 11500);
+        }
+
+        [TestMethod]
+        public void Test9()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            banka.OdobriMinus("HR66", 2000);
+
+            Assert.IsTrue(banka.PrebaciSredstva("HR66", "HR55", 4500).Izvor.Stanje == -2000 && banka.PrebaciSredstva("HR66", "HR55", 4500).Odrediste.Stanje == 12000);
+        }
+
+        [TestMethod]
+        public void Test9_1()
+        {
+            UpraviteljTransakcijama banka = new UpraviteljTransakcijama();
+
+            banka.OdobriMinus("HR66", 2000);
+
+            Assert.IsTrue(banka.PrebaciSredstva("HR66", "HR55", 4500).Naplaceno == 4000);
+        }
+    }
+}
